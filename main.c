@@ -13,7 +13,6 @@
 
 
 volatile char display[8];
-
 volatile int cur_row = 0; // current displayed digit
 
 ISR(TIMER0_OVF_vect) {
@@ -28,11 +27,11 @@ ISR(TIMER0_OVF_vect) {
 		cur_row = 0;
 	}
 
-	/* turn off all to avoid ghosting */
-	PORTA = 0xff;
-	PORTC = ~(1 << cur_row);
+//	/* turn off all to avoid ghosting TODO is that needed? */
+//	PORTA = 0xff;
 
 	/* and on */
+	PORTC = ~(1 << cur_row);
 	PORTA = ~display[cur_row];
 }
 
