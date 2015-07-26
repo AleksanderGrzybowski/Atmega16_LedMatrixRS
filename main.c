@@ -1,5 +1,8 @@
 #define F_CPU 16000000UL
 
+#define USART_BAUDRATE 9600
+#define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
+
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -11,7 +14,6 @@
 volatile char display[8];
 
 volatile int cur_row = 0; // current displayed digit
-
 
 ISR(TIMER0_OVF_vect) {
 
@@ -33,6 +35,24 @@ ISR(TIMER0_OVF_vect) {
 	PORTA = ~display[cur_row];
 }
 
+char buf[2] = {0, 0};
+char cur_row_serial = 0;
+
+ISR(USART_RXC_vect)
+{
+   char recv;
+   recv = UDR; // Fetch the received byte value into the variable "ByteReceived"
+
+   buf[0] = recv;
+   LCD_WriteText(buf);
+
+   if (cur_row_serial == 8) {
+	   cur_row_serial = 0;
+   }
+   display[cur_row_serial++] = recv;
+
+   UDR = recv; // Echo back the received byte back to the computer
+}
 
 int main(void) {
 
@@ -56,19 +76,20 @@ int main(void) {
 	TCCR0 |= (1 << CS02);
 	TCCR0 &= ~(1 << CS01);
 	TCCR0 &= ~(1 << CS00);
+
+	/* serial */
+	UCSRB = (1 << RXEN) | (1 << TXEN); // Turn on the transmission and reception circuitry
+	UCSRC = (1 << URSEL) | (1 << UCSZ0) | (1 << UCSZ1); // Use 8-bit character sizes
+
+	UBRRH = (BAUD_PRESCALE >> 8); // Load upper 8-bits of the baud rate value into the high byte of the UBRR register
+	UBRRL = BAUD_PRESCALE; // Load lower 8-bits of the baud rate value into the low byte of the UBRR register
+
+	UCSRB |= (1 << RXCIE); // Enable the USART Recieve Complete interrupt (USART_RXC)
+
 	/* this is needed! */
 	sei();
 
-
-	while(1) {
-		int i, j;
-
-		for (i = 0; i < 8; ++i) {
-			for (j = 0; j < 256; j++) {
-				display[i] = j;
-				_delay_ms(10);
-			}
-		}
+	while (1) {
 
 	}
 }
