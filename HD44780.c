@@ -1,18 +1,18 @@
-#include "_HD44780.h"
+#include "HD44780.h"
 
-int value;
+int _value;
 
-#define DS_PORT PORTC
-#define DS_DDR DDRC
-#define DS_NUM (1 << PC0)
+#define DS_PORT PORTD
+#define DS_DDR DDRD
+#define DS_NUM (1 << PD4)
 
-#define SHCP_PORT PORTC
-#define SHCP_DDR DDRC
-#define SHCP_NUM (1 << PC1)
+#define SHCP_PORT PORTD
+#define SHCP_DDR DDRD
+#define SHCP_NUM (1 << PD5)
 
-#define STCP_PORT PORTC
-#define STCP_DDR DDRC
-#define STCP_NUM (1 << PC2)
+#define STCP_PORT PORTD
+#define STCP_DDR DDRD
+#define STCP_NUM (1 << PD6)
 
 void DS_1() {
 	DS_PORT |= DS_NUM;
@@ -59,30 +59,30 @@ void commit() {
 }
 
 void lcd_push() {
-	transmit(value);
+	transmit(_value);
 	commit();
 }
 
 void _LCD_OutNibble(unsigned char nibbleToWrite) {
 	if (nibbleToWrite & 0x01)
-		value |= LCD_DB4;
+		_value |= LCD_DB4;
 	else
-		value &= ~LCD_DB4;
+		_value &= ~LCD_DB4;
 
 	if (nibbleToWrite & 0x02)
-		value |= LCD_DB5;
+		_value |= LCD_DB5;
 	else
-		value &= ~LCD_DB5;
+		_value &= ~LCD_DB5;
 
 	if (nibbleToWrite & 0x04)
-		value |= LCD_DB6;
+		_value |= LCD_DB6;
 	else
-		value &= ~LCD_DB6;
+		_value &= ~LCD_DB6;
 
 	if (nibbleToWrite & 0x08)
-		value |= LCD_DB7;
+		_value |= LCD_DB7;
 	else
-		value &= ~LCD_DB7;
+		_value &= ~LCD_DB7;
 
 }
 //-------------------------------------------------------------------------------------------------
@@ -91,15 +91,15 @@ void _LCD_OutNibble(unsigned char nibbleToWrite) {
 //
 //-------------------------------------------------------------------------------------------------
 void _LCD_Write(unsigned char dataToWrite) {
-	value |= LCD_E;
+	_value |= LCD_E;
 	_LCD_OutNibble(dataToWrite >> 4);
 	lcd_push();
-	value &= ~LCD_E;
+	_value &= ~LCD_E;
 	lcd_push();
-	value |= LCD_E;
+	_value |= LCD_E;
 	_LCD_OutNibble(dataToWrite);
 	lcd_push();
-	value &= ~LCD_E;
+	_value &= ~LCD_E;
 	lcd_push();
 	_delay_us(50);
 }
@@ -109,7 +109,7 @@ void _LCD_Write(unsigned char dataToWrite) {
 //
 //-------------------------------------------------------------------------------------------------
 void LCD_WriteCommand(unsigned char commandToWrite) {
-	value &= ~LCD_RS;
+	_value &= ~LCD_RS;
 	_LCD_Write(commandToWrite);
 }
 //-------------------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ void LCD_WriteCommand(unsigned char commandToWrite) {
 //
 //-------------------------------------------------------------------------------------------------
 void LCD_WriteData(unsigned char dataToWrite) {
-	value |= LCD_RS;
+	_value |= LCD_RS;
 	_LCD_Write(dataToWrite);
 }
 //-------------------------------------------------------------------------------------------------
@@ -172,30 +172,30 @@ void LCD_Initalize(void) {
 
 	unsigned char i;
 
-	value |= LCD_E;   //
+	_value |= LCD_E;   //
 	lcd_push();
-	value |= LCD_RS;  //
+	_value |= LCD_RS;  //
 	lcd_push();
 	_delay_ms(15); // oczekiwanie na ustalibizowanie si� napiecia zasilajacego
-	value &= ~LCD_RS; // wyzerowanie linii RS
+	_value &= ~LCD_RS; // wyzerowanie linii RS
 	lcd_push();
-	value &= ~LCD_E;  // wyzerowanie linii E
+	_value &= ~LCD_E;  // wyzerowanie linii E
 	lcd_push();
 
 	for (i = 0; i < 3; i++) // trzykrotne powt�rzenie bloku instrukcji
 			{
-		value |= LCD_E; //  E = 1
+		_value |= LCD_E; //  E = 1
 		_LCD_OutNibble(0x03); // tryb 8-bitowy
 		lcd_push();
-		value &= ~LCD_E; // E = 0
+		_value &= ~LCD_E; // E = 0
 		lcd_push();
 		_delay_ms(5); // czekaj 5ms
 	}
 	lcd_push();
-	value |= LCD_E; // E = 1
+	_value |= LCD_E; // E = 1
 	_LCD_OutNibble(0x02); // tryb 4-bitowy
 	lcd_push();
-	value &= ~LCD_E; // E = 0
+	_value &= ~LCD_E; // E = 0
 	lcd_push();
 
 	_delay_ms(1); // czekaj 1ms

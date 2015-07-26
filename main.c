@@ -6,7 +6,7 @@
 #include <avr/sleep.h>
 #include <stdbool.h>
 
-
+#include "HD44780.h"
 
 volatile char display[8];
 
@@ -38,6 +38,13 @@ int main(void) {
 
 	DDRA = 0xff;
 	DDRC = 0xff;
+
+	/* LCD-595 */
+	DDRD |= (1 << PD4);
+	DDRD |= (1 << PD5);
+	DDRD |= (1 << PD6);
+	LCD_Initalize();
+	LCD_WriteText("Hello lcd");
 
 	/* disable JTAG so we can use all pins */
 	MCUCSR |= (1 << JTD);
