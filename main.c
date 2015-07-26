@@ -11,6 +11,7 @@
 
 #include "HD44780.h"
 
+
 volatile char display[8];
 
 volatile int cur_row = 0; // current displayed digit
@@ -35,23 +36,32 @@ ISR(TIMER0_OVF_vect) {
 	PORTA = ~display[cur_row];
 }
 
-char buf[2] = {0, 0};
-char cur_row_serial = 0;
+#define BLOCK_BEGIN_0 'a'
+#define BLOCK_BEGIN_1 'b'
 
-ISR(USART_RXC_vect)
-{
-   char recv;
-   recv = UDR; // Fetch the received byte value into the variable "ByteReceived"
+char recv, prev;
+int waiting = 1;
+int cur_row_serial;
 
-   buf[0] = recv;
-   LCD_WriteText(buf);
+ISR(USART_RXC_vect) {
 
-   if (cur_row_serial == 8) {
-	   cur_row_serial = 0;
-   }
-   display[cur_row_serial++] = recv;
+	prev = recv;
+	recv = UDR; // Fetch the received byte value into the variable "ByteReceived"
 
-   UDR = recv; // Echo back the received byte back to the computer
+	if (waiting) {
+		if (prev == BLOCK_BEGIN_0 && recv == BLOCK_BEGIN_1) {
+			waiting = 0;
+			cur_row_serial = 0;
+		}
+	} else { // receiving image
+		display[cur_row_serial++] = recv;
+
+		if (cur_row_serial == 8) {
+			waiting = 1;
+		}
+	}
+
+	UDR = recv; // Echo back the received byte back to the computer
 }
 
 int main(void) {
