@@ -3,6 +3,8 @@
 #define USART_BAUDRATE 9600
 #define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
 
+#define DEBUG_LCD
+
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -37,6 +39,7 @@ ISR(TIMER0_OVF_vect) {
 char recv;
 int is_block_mode = 0;
 int cur_row_serial;
+int recv_count = 0;
 
 /* protocol spec in separate file */
 
@@ -68,6 +71,7 @@ ISR(USART_RXC_vect) {
 	}
 
 	UDR = recv; // Echo back the received byte back to the computer
+	recv_count++;
 }
 
 int main(void) {
@@ -75,18 +79,21 @@ int main(void) {
 	DDRA = 0xff;
 	DDRC = 0xff;
 
+#ifdef DEBUG_LCD
 	/* LCD-595 */
 	DDRD |= (1 << PD4);
 	DDRD |= (1 << PD5);
 	DDRD |= (1 << PD6);
+
 	LCD_Initalize();
-	LCD_WriteText("Hello lcd");
+	LCD_WriteText("LCD ready");
+#endif
 
 	/* disable JTAG so we can use all pins */
 	MCUCSR |= (1 << JTD);
 	MCUCSR |= (1 << JTD);
 
-	/* enable timer overflow interrupts for PWM */
+	/* enable timer overflow interrupts for multiplexing */
 	TIMSK |= (1 << TOIE0);
 	/* set prescaler, selected by experimenting, but works perfectly */
 	TCCR0 |= (1 << CS02);
@@ -110,12 +117,32 @@ int main(void) {
 	for (i = 0; i < 8; ++i) {
 		for (j = 0; j < 8; ++j) {
 			display[i] |= (1 << j);
-			_delay_ms(10);
+			_delay_ms(5);
 			display[i] &= ~(1 << j);
 		}
 	}
 
+#ifdef DEBUG_LCD
+	char message_first[16];
+	char message_second[16];
+	int blink = 0;
+
+	while (1) {
+		sprintf(message_first, "Count: %d      %c", recv_count, blink ? '-' : '|');
+		sprintf(message_second, "Last rcv: 0x%x", recv);
+
+		LCD_Clear();
+		LCD_WriteText(message_first);
+		LCD_GoTo(0, 1);
+		LCD_WriteText(message_second);
+
+		blink = !blink;
+		_delay_ms(1000);
+	}
+
+#else
 	while (1) {
 
 	}
+#endif
 }
