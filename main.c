@@ -11,7 +11,6 @@
 
 #include "HD44780.h"
 
-
 volatile char display[8];
 volatile int cur_row = 0; // current displayed digit
 
@@ -52,10 +51,10 @@ ISR(USART_RXC_vect) {
 		if (recv & (1 << 7)) { // init block mode
 			is_block_mode = 1;
 			cur_row_serial = 0;
-		} else { // receive single 'dot'
+		} else { // received single 'dot'
 			int row = (recv >> 3) & 7;
 			int col = (recv >> 0) & 7;
-			int state = recv & (1 << 6);
+			int state = recv & (1 << 6); // on/off
 
 			if (state) {
 				display[row] |= (1 << col);
@@ -104,7 +103,6 @@ int main(void) {
 	/* this is needed! */
 	sei();
 
-
 	/* testing routine */
 	int i, j;
 	for (i = 0; i < 8; ++i) {
@@ -114,7 +112,6 @@ int main(void) {
 			display[i] &= ~(1 << j);
 		}
 	}
-
 
 	while (1) {
 
