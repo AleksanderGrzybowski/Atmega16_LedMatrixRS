@@ -1,0 +1,12 @@
+*** Set on or off a single dot ***
+
+Send 1 byte of format 0SRRRCCC, where:
+# 0 - literal 0
+# S - on (1) or off (0)
+# RRR - row number, (0-7)
+# CCC - col number, (0-7)
+
+
+*** Set whole display ***
+
+Send 1 byte with MSB=1 (for example 0xff), then 8 consecutive bytes describing each row.

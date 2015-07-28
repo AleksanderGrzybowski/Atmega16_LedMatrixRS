@@ -38,6 +38,8 @@ char recv;
 int is_block_mode = 0;
 int cur_row_serial;
 
+/* protocol spec in separate file */
+
 ISR(USART_RXC_vect) {
 	recv = UDR;
 
