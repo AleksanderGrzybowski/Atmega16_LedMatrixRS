@@ -10,6 +10,7 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "HD44780.h"
 
