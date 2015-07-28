@@ -130,7 +130,7 @@ int main(void) {
 
 	while (1) {
 		sprintf(message_first, "Count: %d      %c", recv_count, blink ? '-' : '|');
-		sprintf(message_second, "Last rcv: 0x%x", recv);
+		sprintf(message_second, "Last rcv: 0x%02x", recv);
 
 		LCD_Clear();
 		LCD_WriteText(message_first);
