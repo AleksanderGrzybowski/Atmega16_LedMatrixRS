@@ -23,10 +23,12 @@ end
 
 def on(row, col)
 	write_byte (encode_row_col(row, col) | (1 << 6))
+	nil
 end
 
 def off(row, col)
 	write_byte (encode_row_col(row, col) & ~(1 << 6))
+	nil
 end
 
 def bulk(arr)
@@ -35,4 +37,30 @@ def bulk(arr)
 	arr.each do |byte|
 		write_byte byte
 	end
+
+	nil
 end
+
+def clear
+	bulk [0x00]*8
+	nil
+end
+
+def flood
+	bulk [0xff]*8
+	nil
+end
+
+def test_all
+	clear
+	7.downto(0) do |i|
+		7.downto(0) do |j|
+			on i, j
+			sleep 0.1
+			off i, j
+		end
+	end
+
+	nil
+end
+
