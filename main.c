@@ -35,29 +35,35 @@ ISR(TIMER0_OVF_vect) {
 	PORTA = ~display[cur_row];
 }
 
-#define BLOCK_BEGIN_0 'a'
-#define BLOCK_BEGIN_1 'b'
-
-char recv, prev;
-int waiting = 1;
+char recv;
+int is_block_mode = 0;
 int cur_row_serial;
 
 ISR(USART_RXC_vect) {
+	recv = UDR;
 
-	prev = recv;
-	recv = UDR; // Fetch the received byte value into the variable "ByteReceived"
-
-	if (waiting) {
-		if (prev == BLOCK_BEGIN_0 && recv == BLOCK_BEGIN_1) {
-			waiting = 0;
-			cur_row_serial = 0;
-		}
-	} else { // receiving image
-		display[cur_row_serial++] = recv;
+	if (is_block_mode) {
+		display[cur_row_serial++] = recv; // TODO double buffering?
 
 		if (cur_row_serial == 8) {
-			waiting = 1;
+			is_block_mode = 0;
 		}
+	} else {
+		if (recv & (1 << 7)) { // init block mode
+			is_block_mode = 1;
+			cur_row_serial = 0;
+		} else { // receive single 'dot'
+			int row = (recv >> 3) & 7;
+			int col = (recv >> 0) & 7;
+			int state = recv & (1 << 6);
+
+			if (state) {
+				display[row] |= (1 << col);
+			} else {
+				display[row] &= ~(1 << col);
+			}
+		}
+
 	}
 
 	UDR = recv; // Echo back the received byte back to the computer
