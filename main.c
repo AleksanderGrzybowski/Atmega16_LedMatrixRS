@@ -98,6 +98,18 @@ int main(void) {
 	/* this is needed! */
 	sei();
 
+
+	/* testing routine */
+	int i, j;
+	for (i = 0; i < 8; ++i) {
+		for (j = 0; j < 8; ++j) {
+			display[i] |= (1 << j);
+			_delay_ms(10);
+			display[i] &= ~(1 << j);
+		}
+	}
+
+
 	while (1) {
 
 	}
